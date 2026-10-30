@@ -1,0 +1,186 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ================================================================
+   Shahzad Labs — Custom Design System
+   ================================================================ */
+
+@layer base {
+    /* Smooth scrolling and selection colors */
+    html {
+        scroll-behavior: smooth;
+        scroll-padding-top: 5rem;
+    }
+
+    ::selection {
+        background-color: rgba(99, 102, 241, 0.3);
+        color: #e0e7ff;
+    }
+
+    /* Custom scrollbar */
+    ::-webkit-scrollbar {
+        width: 6px;
+    }
+    ::-webkit-scrollbar-track {
+        background: #09090b;
+    }
+    ::-webkit-scrollbar-thumb {
+        background: #3f3f46;
+        border-radius: 999px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+        background: #6366f1;
+    }
+}
+
+@layer components {
+    /* ── Glass Card ─────────────────────────────────────────────── */
+    .glass-card {
+        @apply relative overflow-hidden rounded-2xl border border-white/[0.06]
+               bg-white/[0.03] backdrop-blur-xl
+               shadow-lg shadow-black/10
+               transition-all duration-300;
+    }
+    .glass-card:hover {
+        @apply border-brand-500/30 bg-white/[0.05]
+               shadow-xl shadow-brand-500/5;
+        transform: translateY(-2px);
+    }
+
+    /* ── Section Heading ───────────────────────────────────────── */
+    .section-heading {
+        @apply font-display text-3xl font-bold tracking-tight text-white
+               sm:text-4xl lg:text-5xl;
+    }
+    .section-subheading {
+        @apply mt-4 max-w-2xl text-lg text-surface-200/60 leading-relaxed;
+    }
+
+    /* ── Badge / Pill ──────────────────────────────────────────── */
+    .tech-badge {
+        @apply inline-flex items-center gap-1 rounded-full
+               bg-brand-500/10 px-3 py-1 text-xs font-medium
+               text-brand-300 ring-1 ring-inset ring-brand-500/20
+               transition-colors duration-200;
+    }
+    .tech-badge:hover {
+        @apply bg-brand-500/20 text-brand-200;
+    }
+
+    /* ── Status Dot ────────────────────────────────────────────── */
+    .status-dot {
+        @apply relative flex h-3 w-3;
+    }
+    .status-dot::before {
+        content: '';
+        @apply absolute inline-flex h-full w-full animate-ping rounded-full
+               bg-accent-400 opacity-75;
+    }
+    .status-dot::after {
+        content: '';
+        @apply relative inline-flex h-3 w-3 rounded-full bg-accent-500;
+    }
+
+    /* ── CTA Button ────────────────────────────────────────────── */
+    .btn-primary {
+        @apply inline-flex items-center justify-center gap-2 rounded-xl
+               bg-brand-500 px-6 py-3 text-sm font-semibold text-white
+               shadow-lg shadow-brand-500/25
+               transition-all duration-300;
+    }
+    .btn-primary:hover {
+        @apply bg-brand-600 shadow-brand-500/40 scale-[1.02];
+    }
+    .btn-primary:active {
+        @apply scale-[0.98];
+    }
+
+    .btn-outline {
+        @apply inline-flex items-center justify-center gap-2 rounded-xl
+               border border-surface-700 bg-transparent
+               px-6 py-3 text-sm font-semibold text-surface-200
+               transition-all duration-300;
+    }
+    .btn-outline:hover {
+        @apply border-brand-500/50 text-white bg-brand-500/10;
+    }
+
+    /* ── Filter Button ─────────────────────────────────────────── */
+    .filter-btn {
+        @apply rounded-full px-5 py-2 text-sm font-medium
+               text-surface-200/70 transition-all duration-300
+               border border-transparent;
+    }
+    .filter-btn:hover {
+        @apply text-white bg-white/[0.05];
+    }
+    .filter-btn.active {
+        @apply bg-brand-500/15 text-brand-300
+               border-brand-500/30 shadow-sm shadow-brand-500/10;
+    }
+
+    /* ── Toast Notification ────────────────────────────────────── */
+    .toast {
+        @apply fixed bottom-6 right-6 z-[9999] max-w-sm rounded-xl
+               border border-white/10 bg-surface-900/95 backdrop-blur-xl
+               px-5 py-4 text-sm text-white shadow-2xl
+               transform transition-all duration-500;
+    }
+    .toast.toast-success {
+        @apply border-accent-500/30;
+    }
+    .toast.toast-error {
+        @apply border-red-500/30;
+    }
+
+    /* ── Noise / grain overlay ─────────────────────────────────── */
+    .noise-overlay {
+        @apply pointer-events-none fixed inset-0 z-50 opacity-[0.015];
+        background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+    }
+
+    /* ── Intersection Observer: reveal on scroll ───────────────── */
+    .reveal {
+        opacity: 0;
+        transform: translateY(30px);
+        transition: opacity 0.7s ease, transform 0.7s ease;
+    }
+    .reveal.revealed {
+        opacity: 1;
+        transform: translateY(0);
+    }
+
+    /* ── Table Horizontal Scrollbar ────────────────────────────── */
+    .scrollbar-thin::-webkit-scrollbar {
+        height: 6px;
+        width: 6px;
+    }
+    .scrollbar-thin::-webkit-scrollbar-track {
+        background: rgba(255, 255, 255, 0.02);
+    }
+    .scrollbar-thin::-webkit-scrollbar-thumb {
+        background: rgba(255, 255, 255, 0.15);
+        border-radius: 999px;
+    }
+    .scrollbar-thin::-webkit-scrollbar-thumb:hover {
+        background: rgba(99, 102, 241, 0.5);
+    }
+
+    /* ── Overflow and Table Containment Utilities ───────────────── */
+    .table-fixed-contained {
+        table-layout: fixed;
+        width: 100%;
+        border-collapse: collapse;
+    }
+    .table-fixed-contained th,
+    .table-fixed-contained td {
+        overflow: hidden;
+        box-sizing: border-box;
+    }
+    .break-anywhere {
+        overflow-wrap: anywhere;
+        word-break: break-word;
+    }
+}
+

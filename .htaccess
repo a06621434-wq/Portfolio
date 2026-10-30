@@ -1,0 +1,20 @@
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+
+    # Prevent infinite loop if already rewritten or if DocumentRoot is public/
+    RewriteCond %{ENV:REDIRECT_STATUS} ^$
+    RewriteCond %{REQUEST_URI} !^/public/
+    RewriteRule ^(.*)$ public/$1 [L]
+</IfModule>
+
+<IfModule mod_authz_core.c>
+    <FilesMatch "^\.(env|git)">
+        Require all denied
+    </FilesMatch>
+</IfModule>
+<IfModule !mod_authz_core.c>
+    <FilesMatch "^\.(env|git)">
+        Order allow,deny
+        Deny from all
+    </FilesMatch>
+</IfModule>
