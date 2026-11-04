@@ -29,3 +29,4 @@ it('renders sitemap xml successfully', function () {
     $response = $this->get('/sitemap.xml');
     $response->assertStatus(200);
 });
+
