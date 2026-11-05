@@ -143,6 +143,14 @@
                 </div>
             </div>
 
+            {{-- Delivery Route Choice Banner --}}
+            <div class="rounded-xl border border-brand-500/30 bg-brand-500/10 p-3 text-xs text-brand-200 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2">
+                <div class="flex items-center gap-2">
+                    <svg class="w-4 h-4 text-brand-400 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                    <span><strong>100% Inbox Delivery Tip:</strong> Click the red <strong class="text-white">Gmail Direct</strong> button below to send straight from your personal Google account (<code>alikhore12@gmail.com</code>) without any spam or server blocking risk!</span>
+                </div>
+            </div>
+
             <form id="reply-form" method="POST" action="{{ route('admin.messages.reply', $message) }}" class="space-y-4 w-full min-w-0">
                 @csrf
 
@@ -150,8 +158,8 @@
                 <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 w-full min-w-0">
                     <div class="min-w-0">
                         <label class="block text-xs font-medium text-surface-200/60 mb-1">From (Sender)</label>
-                        <div class="rounded-xl border border-white/[0.08] bg-white/[0.02] px-3.5 py-2.5 text-xs text-white/90 font-mono truncate w-full min-w-0" title="Shahzad Ali &lt;alikhore12@gmail.com&gt;">
-                            Shahzad Ali &lt;alikhore12@gmail.com&gt;
+                        <div class="rounded-xl border border-white/[0.08] bg-white/[0.02] px-3.5 py-2.5 text-xs text-white/90 font-mono truncate w-full min-w-0" title="Shahzad Ali &lt;contact@shahzadlabs.com&gt; (Replies to alikhore12@gmail.com)">
+                            contact@shahzadlabs.com
                         </div>
                     </div>
 

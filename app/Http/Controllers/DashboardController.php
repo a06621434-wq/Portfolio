@@ -220,8 +220,8 @@ class DashboardController extends Controller
         // 2. High-reliability fallback: Hostinger Native PHP mail() wrapper with anti-spam headers
         if (function_exists('mail')) {
             $fromName  = 'Shahzad Ali';
-            $fromAddr  = 'alikhore12@gmail.com';
-            $domain    = parse_url((string) config('app.url', 'https://shahzadlabs.com'), PHP_URL_HOST) ?: 'shahzadlabs.com';
+            $fromAddr  = 'contact@shahzadlabs.com';
+            $domain    = 'shahzadlabs.com';
             $boundary  = '==Multipart_Boundary_x' . md5(microtime());
             $messageId = '<' . time() . '.' . bin2hex(random_bytes(8)) . '@' . $domain . '>';
             $date      = date('r');
@@ -304,8 +304,8 @@ class DashboardController extends Controller
         if ($action === 'test_php_mail') {
             $to = $request->query('to', 'alikhore12@gmail.com');
             $fromName  = 'Shahzad Ali';
-            $fromAddr  = 'alikhore12@gmail.com';
-            $domain    = parse_url((string) config('app.url', 'https://shahzadlabs.com'), PHP_URL_HOST) ?: 'shahzadlabs.com';
+            $fromAddr  = $request->query('from', 'contact@shahzadlabs.com');
+            $domain    = 'shahzadlabs.com';
             $boundary  = '==Multipart_Boundary_x' . md5(microtime());
             $messageId = '<' . time() . '.' . bin2hex(random_bytes(8)) . '@' . $domain . '>';
             $date      = date('r');
@@ -321,7 +321,7 @@ class DashboardController extends Controller
                 'X-Priority: 3',
             ];
 
-            $subject = 'Shahzad Labs Inbox Delivery Test - ' . now()->format('H:i:s');
+            $subject = 'Shahzad Labs Verified Delivery Test - ' . now()->format('H:i:s');
             $plain = "Hello,\n\nThis is a verified delivery test from Shahzad Ali at Shahzad Labs.\nSent at: " . now()->toDateTimeString() . "\n\nBest regards,\nShahzad Ali\nhttps://shahzadlabs.com";
             $html = "<html><body style='font-family: -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, sans-serif; line-height: 1.6; color: #1e293b; max-width: 600px; margin: 0 auto; padding: 24px; background: #f8fafc;'><div style='background: #ffffff; border-radius: 12px; padding: 32px; border: 1px solid #e2e8f0;'><h2 style='color: #4f46e5; margin-top: 0;'>Shahzad Labs</h2><p>Hello,</p><p>This is a verified inquiry reply test sent directly from <strong>Shahzad Labs</strong> to verify inbox delivery.</p><div style='background: #f1f5f9; padding: 16px; border-radius: 8px; margin: 20px 0;'><p style='margin: 0; font-size: 13px; color: #475569;'><strong>Status:</strong> Authenticated message with aligned envelope headers.</p></div><p>Best regards,<br><strong>Shahzad Ali</strong><br><a href='https://shahzadlabs.com' style='color: #4f46e5; text-decoration: none;'>shahzadlabs.com</a></p></div></body></html>";
 

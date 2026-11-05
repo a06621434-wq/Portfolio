@@ -105,8 +105,8 @@ class SendReplyEmailJob implements ShouldQueue
             $renderedHtml = $mailable->render();
             $subject      = $this->replySubject;
             $fromName     = $this->senderName ?: 'Shahzad Ali';
-            $fromAddr     = 'alikhore12@gmail.com';
-            $domain       = parse_url((string) config('app.url', 'https://shahzadlabs.com'), PHP_URL_HOST) ?: 'shahzadlabs.com';
+            $domain       = 'shahzadlabs.com';
+            $fromAddr     = 'contact@' . $domain;
 
             // Clean Plain-Text alternative
             $plainText = strip_tags(str_replace(['<br>', '<br/>', '<br />', '</p>', '</div>'], "\n", $renderedHtml));
@@ -142,8 +142,9 @@ class SendReplyEmailJob implements ShouldQueue
 
             $body .= "--" . $boundary . "--\r\n";
 
-            // Crucial: -f parameter sets Envelope-From to match From header on Hostinger MTA,
-            // passing SPF alignment and avoiding spam classification!
+            // Use contact@shahzadlabs.com for envelope sender because Hostinger's SPF
+            // record (v=spf1 include:_spf.mail.hostinger.com ~all) is for shahzadlabs.com,
+            // passing SPF validation and preventing Google from dropping the email!
             $additionalParams = '-f' . $fromAddr;
 
             return (bool) @mail($recipient, $subject, $body, implode("\r\n", $headers), $additionalParams);
