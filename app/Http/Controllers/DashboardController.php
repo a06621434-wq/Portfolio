@@ -261,24 +261,28 @@ class DashboardController extends Controller
             ]);
         }
 
-        if ($action === 'test_send') {
+        if ($action === 'test_php_mail') {
             $to = $request->query('to', 'alikhore12@gmail.com');
-            $mailer = $request->query('mailer', config('mail.default'));
-            try {
-                Mail::mailer($mailer)->raw("Shahzad Labs Diagnostic Test Mail\nSent at: " . now()->toDateTimeString() . "\nMailer: {$mailer}", function ($m) use ($to, $mailer) {
-                    $m->to($to)->subject("Shahzad Labs Test via [{$mailer}] - " . now()->format('H:i:s'));
-                });
-                return response()->json([
-                    'status'  => 'success',
-                    'message' => "Email sent successfully to {$to} via [{$mailer}].",
-                ]);
-            } catch (\Throwable $e) {
-                return response()->json([
-                    'status'  => 'error',
-                    'mailer'  => $mailer,
-                    'error'   => $e->getMessage(),
-                ], 500);
-            }
+            $subject = 'Shahzad Labs PHP mail() Test - ' . now()->format('H:i:s');
+            $body = "This is a test email sent using PHP native mail() function on Hostinger at " . now()->toDateTimeString();
+            $from = config('mail.from.address', 'info@shahzadlabs.com');
+            $headers = [
+                'From: ' . config('mail.from.name', 'Shahzad Labs') . ' <' . $from . '>',
+                'Reply-To: alikhore12@gmail.com',
+                'X-Mailer: PHP/' . phpversion(),
+                'MIME-Version: 1.0',
+                'Content-Type: text/plain; charset=UTF-8',
+            ];
+
+            $sent = @mail($to, $subject, $body, implode("\r\n", $headers));
+
+            return response()->json([
+                'status'     => $sent ? 'success' : 'failed',
+                'sent'       => $sent,
+                'to'         => $to,
+                'from'       => $from,
+                'last_error' => error_get_last(),
+            ]);
         }
 
         try {
