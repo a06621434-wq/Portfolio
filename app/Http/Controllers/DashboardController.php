@@ -2,16 +2,20 @@
 
 namespace App\Http\Controllers;
 
+use App\Jobs\SendReplyEmailJob;
 use App\Mail\MessageReply;
 use App\Models\Message;
 use App\Models\Project;
 use App\Models\Skill;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Artisan;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Str;
 
 /**
- * Admin dashboard: overview metrics and inquiry management.
+ * Admin dashboard: overview metrics, inquiry management, and queue worker operations.
  */
 class DashboardController extends Controller
 {
@@ -23,7 +27,7 @@ class DashboardController extends Controller
         $stats = [
             'total_projects'     => Project::count(),
             'featured_projects'  => Project::featured()->count(),
-            'total_skills'        => Skill::count(),
+            'total_skills'       => Skill::count(),
             'total_messages'     => Message::count(),
             'unread_messages'    => Message::unread()->count(),
         ];
@@ -32,7 +36,14 @@ class DashboardController extends Controller
         $recentProjects = Project::latest()->take(5)->get();
         $recentSkills   = Skill::latest()->take(5)->get();
 
-        return view('admin.dashboard', compact('stats', 'recentMessages', 'recentProjects', 'recentSkills'));
+        $queueStats = [
+            'pending' => DB::table('jobs')->count(),
+            'failed'  => DB::table('failed_jobs')->count(),
+            'driver'  => config('queue.default', 'database'),
+            'mailer'  => config('mail.default', 'smtp'),
+        ];
+
+        return view('admin.dashboard', compact('stats', 'recentMessages', 'recentProjects', 'recentSkills', 'queueStats'));
     }
 
     /**
@@ -56,11 +67,18 @@ class DashboardController extends Controller
 
         $message->load('replies.user');
 
-        return view('admin.message-show', compact('message'));
+        $queueStats = [
+            'pending' => DB::table('jobs')->count(),
+            'failed'  => DB::table('failed_jobs')->count(),
+            'driver'  => config('queue.default', 'database'),
+            'mailer'  => config('mail.default', 'smtp'),
+        ];
+
+        return view('admin.message-show', compact('message', 'queueStats'));
     }
 
     /**
-     * Send direct reply to a contact inquiry message.
+     * Send direct reply to a contact inquiry message via queue with instant processing.
      */
     public function replyMessage(Request $request, Message $message)
     {
@@ -82,30 +100,59 @@ class DashboardController extends Controller
             'replied_at' => now(),
         ]);
 
-        // 3. Dispatch Email notification to sender
+        // 3. Dispatch Email notification to sender via Queue Job
+        $senderName = auth()->user()?->name ?: 'Shahzad Ali (Shahzad Labs)';
         $mailError = null;
+
         try {
-            $senderName = auth()->user()?->name ?: 'Shahzad Ali (Shahzad Labs)';
-            Mail::to($message->email)->send(
-                new MessageReply($message, $validated['subject'], $validated['reply_body'], $senderName)
-            );
+            // Push job onto queue
+            SendReplyEmailJob::dispatch($message, $validated['subject'], $validated['reply_body'], $senderName);
+
+            // Execute an immediate worker cycle so email sends right away without requiring a background supervisor daemon
+            if (config('queue.default') === 'database') {
+                Artisan::call('queue:work', [
+                    '--stop-when-empty' => true,
+                    '--max-jobs'        => 5,
+                    '--tries'           => 3,
+                    '--timeout'         => 25,
+                ]);
+            }
         } catch (\Throwable $e) {
             $mailError = $e->getMessage();
-            Log::warning('Direct message reply mail failed: ' . $mailError);
+            Log::warning('Direct message reply queue execution failed: ' . $mailError);
         }
 
-        $successMsg = 'Direct reply sent to ' . $message->email . ' successfully!';
+        // 4. Verify whether the job was sent or failed in failed_jobs table
+        $recentFailed = DB::table('failed_jobs')
+            ->where('failed_at', '>=', now()->subSeconds(25))
+            ->latest('id')
+            ->first();
+
+        if ($recentFailed && empty($mailError)) {
+            $exText = (string) $recentFailed->exception;
+            if (str_contains($exText, '535') || str_contains($exText, 'BadCredentials') || str_contains($exText, 'Username and Password not accepted')) {
+                $mailError = 'Google SMTP authentication failed (BadCredentials). Google requires a 16-character App Password in .env.';
+            } else {
+                $mailError = 'Queue delivery issue: ' . Str::limit(strip_tags($recentFailed->exception), 140);
+            }
+        }
+
+        $isSuccessful = empty($mailError);
+        $successMsg = 'Direct reply queued and sent to ' . $message->email . ' successfully!';
+
         if (config('mail.default') === 'log') {
-            $successMsg = 'Reply saved in history! NOTE: Server mailer is currently set to "log" mode, so real email is not sent over internet until SMTP is configured in .env.';
+            $successMsg = 'Reply saved in history! NOTE: Server mailer is set to "log" mode, so email was recorded in storage/logs/laravel.log.';
         } elseif ($mailError) {
-            $successMsg .= ' (Reply saved to history; mail status: ' . $mailError . ')';
+            $successMsg = 'Reply saved to history! Notice: ' . $mailError . ' (You can also click "Gmail" button above to send immediately via Gmail).';
         }
 
         if ($request->wantsJson() || $request->ajax()) {
             return response()->json([
-                'success' => true,
-                'message' => $successMsg,
-                'reply'   => [
+                'success'    => true,
+                'delivered'  => $isSuccessful,
+                'message'    => $successMsg,
+                'mail_error' => $mailError,
+                'reply'      => [
                     'id'         => $reply->id,
                     'subject'    => $reply->subject,
                     'reply_body' => $reply->reply_body,
@@ -116,6 +163,99 @@ class DashboardController extends Controller
         }
 
         return redirect()->back()->with('success', $successMsg);
+    }
+
+    /**
+     * Trigger queue worker on demand from Admin dashboard.
+     */
+    public function processQueue(Request $request)
+    {
+        try {
+            Artisan::call('queue:work', [
+                '--stop-when-empty' => true,
+                '--max-jobs'        => 25,
+                '--tries'           => 3,
+                '--timeout'         => 35,
+            ]);
+
+            $pending = DB::table('jobs')->count();
+            $failed  = DB::table('failed_jobs')->count();
+
+            return response()->json([
+                'success' => true,
+                'message' => "Queue worker cycle finished! Pending jobs: {$pending}, Failed jobs: {$failed}.",
+                'pending' => $pending,
+                'failed'  => $failed,
+            ]);
+        } catch (\Throwable $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Queue worker error: ' . $e->getMessage(),
+            ], 500);
+        }
+    }
+
+    /**
+     * Send a diagnostic test email to verify SMTP credentials directly.
+     */
+    public function testMail(Request $request)
+    {
+        $targetEmail = $request->input('email', config('mail.from.address') ?: 'alikhore12@gmail.com');
+
+        try {
+            Mail::raw("Shahzad Labs SMTP Diagnostic Test\nTimestamp: " . now()->toDateTimeString() . "\nMailer: " . config('mail.default'), function ($m) use ($targetEmail) {
+                $m->to($targetEmail)
+                  ->subject('Shahzad Labs SMTP Test - ' . now()->format('H:i:s'));
+            });
+
+            return response()->json([
+                'success' => true,
+                'message' => "Test email successfully sent to {$targetEmail} via [" . config('mail.default') . ']!',
+            ]);
+        } catch (\Throwable $e) {
+            $msg = $e->getMessage();
+            if (str_contains($msg, '535') || str_contains($msg, 'BadCredentials')) {
+                $msg = 'Google SMTP rejected password (535 BadCredentials). Please generate and enter a 16-digit Google App Password in .env.';
+            }
+
+            return response()->json([
+                'success' => false,
+                'message' => 'SMTP Diagnostic Error: ' . $msg,
+            ], 422);
+        }
+    }
+
+    /**
+     * Public Cron Endpoint for Hostinger Scheduled Cron Job.
+     * Usage: curl https://shahzadlabs.com/cron/process-queue?token=shahzadlabs-queue-sync
+     */
+    public function cronProcessQueue(Request $request)
+    {
+        $expectedToken = env('CRON_TOKEN', 'shahzadlabs-queue-sync');
+        if ($request->query('token') !== $expectedToken) {
+            return response()->json(['error' => 'Unauthorized cron token'], 403);
+        }
+
+        try {
+            Artisan::call('queue:work', [
+                '--stop-when-empty' => true,
+                '--max-jobs'        => 30,
+                '--tries'           => 3,
+                '--timeout'         => 45,
+            ]);
+
+            $pending = DB::table('jobs')->count();
+            $failed  = DB::table('failed_jobs')->count();
+
+            return response()->json([
+                'status'  => 'success',
+                'time'    => now()->toDateTimeString(),
+                'pending' => $pending,
+                'failed'  => $failed,
+            ]);
+        } catch (\Throwable $e) {
+            return response()->json(['status' => 'error', 'message' => $e->getMessage()], 500);
+        }
     }
 
     /**

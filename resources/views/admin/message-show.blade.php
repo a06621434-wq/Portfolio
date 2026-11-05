@@ -91,8 +91,41 @@
                 <span class="text-[11px] text-surface-200/50 truncate">Replying to: <strong class="text-white">{{ $message->name }}</strong></span>
             </div>
 
-            {{-- Dynamic Alert Notice (Appears upon sending) --}}
-            <div id="reply-status-alert" class="hidden rounded-xl border px-4 py-3 text-xs flex items-center gap-2 w-full min-w-0"></div>
+            {{-- Queue & Mail System Status Bar --}}
+            <div class="rounded-xl border border-white/[0.08] bg-white/[0.02] p-3 text-xs flex flex-wrap items-center justify-between gap-3">
+                <div class="flex items-center gap-3 flex-wrap">
+                    <span class="inline-flex items-center gap-1.5 text-surface-200/60">
+                        <span class="h-2 w-2 rounded-full bg-brand-400"></span>
+                        <span>Queue: <strong class="text-white font-mono">{{ $queueStats['driver'] ?? config('queue.default', 'database') }}</strong></span>
+                    </span>
+                    <span class="inline-flex items-center gap-1.5 text-surface-200/60">
+                        <span class="h-2 w-2 rounded-full bg-cyan-400"></span>
+                        <span>Mailer: <strong class="text-white font-mono">{{ $queueStats['mailer'] ?? config('mail.default', 'smtp') }}</strong></span>
+                    </span>
+                    <span class="inline-flex items-center gap-1 text-surface-200/60">
+                        Pending: <strong id="queue-pending-count" class="text-brand-300 font-mono">{{ $queueStats['pending'] ?? 0 }}</strong>
+                    </span>
+                    @if(($queueStats['failed'] ?? 0) > 0)
+                    <span class="inline-flex items-center gap-1 text-red-400">
+                        Failed: <strong id="queue-failed-count" class="font-mono">{{ $queueStats['failed'] }}</strong>
+                    </span>
+                    @endif
+                </div>
+
+                <div class="flex items-center gap-2">
+                    <button type="button" id="btn-run-queue" onclick="runQueueWorker(this)" class="px-2.5 py-1 rounded-lg border border-white/[0.1] bg-white/[0.05] hover:bg-white/[0.1] text-[11px] text-surface-200 hover:text-white transition-colors cursor-pointer flex items-center gap-1" title="Process pending queued jobs">
+                        <svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+                        <span>Run Queue</span>
+                    </button>
+                    <button type="button" id="btn-test-mail" onclick="runTestMail(this)" class="px-2.5 py-1 rounded-lg border border-cyan-500/20 bg-cyan-500/10 hover:bg-cyan-500/20 text-[11px] text-cyan-300 transition-colors cursor-pointer flex items-center gap-1" title="Test SMTP connection">
+                        <svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
+                        <span>Test SMTP</span>
+                    </button>
+                </div>
+            </div>
+
+            {{-- Dynamic Alert Notice (Appears upon sending / queue / test) --}}
+            <div id="reply-status-alert" class="hidden rounded-xl border px-4 py-3 text-xs w-full min-w-0"></div>
 
             {{-- Quick Templates --}}
             <div class="w-full min-w-0">
@@ -150,7 +183,7 @@
                         <svg id="btn-submit-icon" class="w-4 h-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                             <path stroke-linecap="round" stroke-linejoin="round" d="M6 12L3.269 3.126A59.768 59.768 0 0121.485 12 59.77 59.77 0 013.27 20.876L5.999 12zm0 0h7.5"/>
                         </svg>
-                        <span id="btn-submit-label" class="font-semibold whitespace-nowrap">Send Reply via Email</span>
+                        <span id="btn-submit-label" class="font-semibold whitespace-nowrap">Send Reply via Mail Queue</span>
                     </button>
 
                     {{-- Secondary Actions: Gmail, WhatsApp --}}
@@ -159,9 +192,10 @@
                         <a id="btn-open-gmail"
                            href="https://mail.google.com/mail/?view=cm&fs=1&to={{ urlencode($message->email) }}&su={{ urlencode('Re: ' . $message->subject) }}"
                            target="_blank" rel="noopener"
-                           class="flex-1 sm:flex-initial inline-flex items-center justify-center gap-2 rounded-xl bg-red-500/15 hover:bg-red-500/25 text-red-300 border border-red-500/30 px-3.5 py-2.5 text-xs font-semibold transition-all min-h-[44px] whitespace-nowrap">
+                           class="flex-1 sm:flex-initial inline-flex items-center justify-center gap-2 rounded-xl bg-red-500/15 hover:bg-red-500/25 text-red-300 border border-red-500/30 px-3.5 py-2.5 text-xs font-semibold transition-all min-h-[44px] whitespace-nowrap"
+                           title="Open directly in Gmail with pre-filled reply">
                             <svg class="w-3.5 h-3.5 fill-current shrink-0" viewBox="0 0 24 24"><path d="M20 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z"/></svg>
-                            <span class="whitespace-nowrap">Gmail</span>
+                            <span class="whitespace-nowrap">Gmail Direct</span>
                         </a>
 
                         {{-- 1-Click WhatsApp with Typed Reply Message --}}
@@ -186,7 +220,7 @@
                 <svg class="w-4 h-4 text-emerald-400 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6"/></svg>
                 <span>Sent Replies History (<span id="replies-count">{{ $message->replies->count() }}</span>)</span>
             </h2>
-            <span class="text-[11px] text-surface-200/40 truncate">Delivered to {{ $message->email }}</span>
+            <span class="text-[11px] text-surface-200/40 truncate">Inquiry email: {{ $message->email }}</span>
         </div>
 
         <div id="replies-container" class="space-y-4 w-full min-w-0">
@@ -210,11 +244,12 @@
         </div>
     </div>
 
-    {{-- Interactive Logic for Templates, Char Counter, Live Links & Seamless Form Submission --}}
+    {{-- Interactive Logic for Templates, Char Counter, Live Links, Queue Worker & Form Submission --}}
     <script>
         const recipientName = @json($message->name);
         const recipientEmail = @json($message->email);
         const originalSubject = @json($message->subject);
+        const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || @json(csrf_token());
 
         function setReplyTemplate(type) {
             const textarea = document.getElementById('reply-body-input');
@@ -247,7 +282,7 @@
             const gmailBtn = document.getElementById('btn-open-gmail');
             const whatsappBtn = document.getElementById('btn-open-whatsapp');
 
-            const subject = subjectInput ? subjectInput.value : ('Re: ' + originalSubject);
+            const subject = subjectInput ? subjectInput.value : ('Re: ' . originalSubject);
             const text = textarea ? textarea.value : '';
 
             if (gmailBtn) {
@@ -255,6 +290,81 @@
             }
             if (whatsappBtn) {
                 whatsappBtn.href = `https://wa.me/923105447307?text=${encodeURIComponent('Hi ' + recipientName + ',\n\n' + text)}`;
+            }
+        }
+
+        // On-demand Queue Worker Trigger
+        async function runQueueWorker(btn) {
+            const alertBox = document.getElementById('reply-status-alert');
+            const pendingCount = document.getElementById('queue-pending-count');
+            const origHtml = btn.innerHTML;
+            btn.disabled = true;
+            btn.innerHTML = `<svg class="animate-spin h-3 w-3 inline mr-1" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg> Working...`;
+
+            try {
+                const res = await fetch('{{ route("admin.queue.process") }}', {
+                    method: 'POST',
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest',
+                        'Accept': 'application/json',
+                        'X-CSRF-TOKEN': csrfToken
+                    }
+                });
+                const data = await res.json();
+                if (pendingCount && typeof data.pending !== 'undefined') {
+                    pendingCount.textContent = data.pending;
+                }
+                alertBox.className = 'rounded-xl border border-cyan-500/30 bg-cyan-500/10 px-4 py-3 text-xs text-cyan-300 flex items-center gap-2';
+                alertBox.innerHTML = `<svg class="w-4 h-4 text-cyan-400 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg><span>${data.message}</span>`;
+                alertBox.classList.remove('hidden');
+            } catch (e) {
+                alertBox.className = 'rounded-xl border border-red-500/30 bg-red-500/10 px-4 py-3 text-xs text-red-300';
+                alertBox.textContent = 'Queue worker error: ' + e.message;
+                alertBox.classList.remove('hidden');
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = origHtml;
+            }
+        }
+
+        // On-demand SMTP Diagnostic Test
+        async function runTestMail(btn) {
+            const alertBox = document.getElementById('reply-status-alert');
+            const origHtml = btn.innerHTML;
+            btn.disabled = true;
+            btn.innerHTML = `<svg class="animate-spin h-3 w-3 inline mr-1" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg> Testing...`;
+
+            try {
+                const res = await fetch('{{ route("admin.mail.test") }}', {
+                    method: 'POST',
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest',
+                        'Accept': 'application/json',
+                        'X-CSRF-TOKEN': csrfToken
+                    }
+                });
+                const data = await res.json();
+                if (res.ok && data.success) {
+                    alertBox.className = 'rounded-xl border border-emerald-500/30 bg-emerald-500/10 px-4 py-3 text-xs text-emerald-300 flex items-center gap-2';
+                    alertBox.innerHTML = `<svg class="w-4 h-4 text-emerald-400 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg><span>${data.message}</span>`;
+                } else {
+                    alertBox.className = 'rounded-xl border border-amber-500/30 bg-amber-500/10 px-4 py-3 text-xs text-amber-300 flex items-start gap-2.5';
+                    alertBox.innerHTML = `
+                        <svg class="w-4 h-4 text-amber-400 shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+                        <div class="space-y-1">
+                            <p class="font-medium text-white">${data.message}</p>
+                            <p class="text-[11px] text-amber-200/80">Tip: Google requires a 16-character App Password generated from your Google Account settings, rather than your standard account login password.</p>
+                        </div>
+                    `;
+                }
+                alertBox.classList.remove('hidden');
+            } catch (e) {
+                alertBox.className = 'rounded-xl border border-red-500/30 bg-red-500/10 px-4 py-3 text-xs text-red-300';
+                alertBox.textContent = 'Diagnostic error: ' + e.message;
+                alertBox.classList.remove('hidden');
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = origHtml;
             }
         }
 
@@ -280,7 +390,7 @@
                 subjectInput.addEventListener('input', updateExternalLinks);
             }
 
-            // AJAX Form Submit with immediate response and seamless history append
+            // AJAX Form Submit with queue dispatch and instant feedback
             if (form) {
                 form.addEventListener('submit', async function (e) {
                     e.preventDefault();
@@ -301,7 +411,7 @@
                             <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
                             <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                         </svg>
-                        Sending Reply...
+                        Queueing &amp; Sending...
                     `;
 
                     try {
@@ -311,7 +421,7 @@
                             headers: {
                                 'X-Requested-With': 'XMLHttpRequest',
                                 'Accept': 'application/json',
-                                'X-CSRF-TOKEN': document.querySelector('input[name="_token"]').value
+                                'X-CSRF-TOKEN': csrfToken
                             },
                             body: formData
                         });
@@ -319,12 +429,23 @@
                         const data = await response.json();
 
                         if (response.ok && data.success) {
-                            // Show success notice
-                            alertBox.className = 'rounded-xl border border-emerald-500/30 bg-emerald-500/10 px-4 py-3 text-xs text-emerald-300 flex items-center gap-2';
-                            alertBox.innerHTML = `
-                                <svg class="w-4 h-4 text-emerald-400 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
-                                <span>${data.message}</span>
-                            `;
+                            // Show status notice
+                            if (data.mail_error) {
+                                alertBox.className = 'rounded-xl border border-amber-500/30 bg-amber-500/10 px-4 py-3 text-xs text-amber-300 flex items-start gap-2.5';
+                                alertBox.innerHTML = `
+                                    <svg class="w-4 h-4 text-amber-400 shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+                                    <div class="space-y-1">
+                                        <p class="font-medium text-white">${data.message}</p>
+                                        <p class="text-[11px] text-amber-200/80">Tip: Click the <strong class="text-white">Gmail Direct</strong> button on the right to open Gmail with this message pre-filled and send directly from your personal Google account!</p>
+                                    </div>
+                                `;
+                            } else {
+                                alertBox.className = 'rounded-xl border border-emerald-500/30 bg-emerald-500/10 px-4 py-3 text-xs text-emerald-300 flex items-center gap-2';
+                                alertBox.innerHTML = `
+                                    <svg class="w-4 h-4 text-emerald-400 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
+                                    <span>${data.message}</span>
+                                `;
+                            }
                             alertBox.classList.remove('hidden');
 
                             // Update Status badge at the top
@@ -369,13 +490,13 @@
                         alertBox.className = 'rounded-xl border border-red-500/30 bg-red-500/10 px-4 py-3 text-xs text-red-300 flex items-center gap-2';
                         alertBox.innerHTML = `
                             <svg class="w-4 h-4 text-red-400 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
-                            <span>Error: ${err.message || 'Could not send reply. Please try Open in Gmail.'}</span>
+                            <span>Error: ${err.message || 'Could not send reply. Please try Gmail Direct.'}</span>
                         `;
                         alertBox.classList.remove('hidden');
                     } finally {
                         submitBtn.disabled = false;
                         submitBtn.classList.remove('opacity-75', 'cursor-not-allowed');
-                        submitLabel.textContent = 'Send Reply via Email';
+                        submitLabel.textContent = 'Send Reply via Mail Queue';
                     }
                 });
             }

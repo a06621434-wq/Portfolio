@@ -78,6 +78,9 @@ Route::match(['GET', 'HEAD'], '/storage/{path}', function (string $path) {
     abort(404);
 })->where('path', '.*')->name('storage.file');
 
+// ── Cron & Queue Background Webhook (Hostinger Scheduled Tasks) ────
+Route::get('/cron/process-queue', [DashboardController::class, 'cronProcessQueue'])->name('cron.queue');
+
 // ── Admin Dashboard (protected) ──────────────────────────────────────
 Route::middleware(['auth', 'verified'])->prefix('admin')->name('admin.')->group(function () {
 
@@ -95,6 +98,10 @@ Route::middleware(['auth', 'verified'])->prefix('admin')->name('admin.')->group(
     Route::get('/messages/{message}', [DashboardController::class, 'showMessage'])->name('messages.show');
     Route::post('/messages/{message}/reply', [DashboardController::class, 'replyMessage'])->name('messages.reply');
     Route::delete('/messages/{message}', [DashboardController::class, 'destroyMessage'])->name('messages.destroy');
+
+    // Queue Worker & Mail Diagnostics
+    Route::post('/queue/process', [DashboardController::class, 'processQueue'])->name('queue.process');
+    Route::post('/mail/test', [DashboardController::class, 'testMail'])->name('mail.test');
 
     // Site Branding & Settings (Hero Image, Logo, Favicon)
     Route::get('/settings', [\App\Http\Controllers\SettingController::class, 'edit'])->name('settings.edit');

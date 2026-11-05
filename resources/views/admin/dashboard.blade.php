@@ -24,9 +24,17 @@
 }" @keydown.escape.window="modalOpen = false">
 
     {{-- Page Header --}}
-    <div class="mb-8">
-        <h1 class="font-display text-2xl font-bold text-white tracking-tight">Dashboard Overview</h1>
-        <p class="mt-1 text-sm text-surface-200/50">Welcome back to the Shahzad Labs control center. Here's a summary of your portfolio activity.</p>
+    <div class="mb-8 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div>
+            <h1 class="font-display text-2xl font-bold text-white tracking-tight">Dashboard Overview</h1>
+            <p class="mt-1 text-sm text-surface-200/50">Welcome back to the Shahzad Labs control center. Here's a summary of your portfolio activity.</p>
+        </div>
+        <div class="flex items-center gap-2 self-start sm:self-auto">
+            <span class="inline-flex items-center gap-1.5 rounded-xl border border-white/[0.08] bg-white/[0.03] px-3.5 py-1.5 text-xs text-surface-200/70">
+                <span class="h-2 w-2 rounded-full bg-emerald-400"></span>
+                <span>Queue: <strong class="text-white font-mono">{{ $queueStats['driver'] ?? 'database' }}</strong> (<span class="text-brand-300 font-mono">{{ $queueStats['pending'] ?? 0 }}</span> pending)</span>
+            </span>
+        </div>
     </div>
 
     {{-- Stats Grid --}}
