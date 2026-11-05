@@ -171,7 +171,7 @@
                         </div>
                         <div class="truncate">
                             <div class="text-xs font-semibold text-white truncate">{{ auth()->user()->name ?? 'Administrator' }}</div>
-                            <div class="text-[10px] text-surface-200/40 truncate">{{ auth()->user()->email ?? 'admin@shahzadlabs.com' }}</div>
+                            <div class="text-[10px] text-surface-200/40 truncate">{{ auth()->user()->email ?? 'alikhore12@gmail.com' }}</div>
                         </div>
                     </div>
 

@@ -83,12 +83,12 @@ try {
     $app = require_once $baseDir . '/bootstrap/app.php';
 
     // Auto-sync database migrations and admin password (Lodhran@345) on deploy
-    $markerFile = $baseDir . '/storage/framework/cache/.bootstrap_v3_done';
+    $markerFile = $baseDir . '/storage/framework/cache/.bootstrap_v4_done';
     if (!file_exists($markerFile)) {
         try {
             \Illuminate\Support\Facades\Artisan::call('migrate', ['--force' => true]);
             $adminUser = \App\Models\User::firstOrCreate(
-                ['email' => 'info@shahzadlabs.com'],
+                ['email' => 'alikhore12@gmail.com'],
                 ['name' => 'Shahzad Labs Admin']
             );
             $adminUser->password = \Illuminate\Support\Facades\Hash::make('Lodhran@345');

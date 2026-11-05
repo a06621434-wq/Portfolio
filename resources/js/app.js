@@ -285,7 +285,7 @@ function initCopyEmail() {
 
     copyBtn.addEventListener('click', async () => {
         try {
-            await navigator.clipboard.writeText('info@shahzadlabs.com');
+            await navigator.clipboard.writeText('alikhore12@gmail.com');
             const originalText = copyBtn.innerHTML;
             copyBtn.innerHTML = `
                 <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">

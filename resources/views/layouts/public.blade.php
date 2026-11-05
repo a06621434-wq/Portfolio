@@ -35,7 +35,7 @@
         "@type": ["ProfessionalService", "Organization"],
         "name": "Shahzad Labs",
         "url": "https://shahzadlabs.com",
-        "email": "info@shahzadlabs.com",
+        "email": "alikhore12@gmail.com",
         "description": "Professional web development studio specializing in Laravel, PHP, MySQL, and modern JavaScript.",
         "knowsAbout": ["Laravel", "PHP", "MySQL", "JavaScript", "Web Development", "SaaS"]
     }
@@ -187,7 +187,7 @@
                     <div class="space-y-3 text-xs">
                         <div>
                             <p class="text-surface-200/50 mb-1">Direct Email:</p>
-                            <a href="mailto:info@shahzadlabs.com" class="text-brand-400 font-mono hover:text-brand-300 transition-colors">info@shahzadlabs.com</a>
+                            <a href="mailto:alikhore12@gmail.com" class="text-brand-400 font-mono hover:text-brand-300 transition-colors">alikhore12@gmail.com</a>
                         </div>
                         <div>
                             <p class="text-surface-200/50 mb-1">WhatsApp Direct:</p>

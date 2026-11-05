@@ -2,10 +2,10 @@
 
     <div x-data="{
         showPassword: false,
-        email: '{{ old('email', 'info@shahzadlabs.com') }}',
+        email: '{{ old('email', 'alikhore12@gmail.com') }}',
         password: '',
         fillDemo() {
-            this.email = 'info@shahzadlabs.com';
+            this.email = 'alikhore12@gmail.com';
             this.password = 'password';
         }
     }" class="w-full">
@@ -40,7 +40,7 @@
                     </div>
                     <div class="truncate text-[11px] leading-tight">
                         <span class="text-white font-medium">Default:</span>
-                        <span class="text-surface-200/60 font-mono">info@shahzadlabs.com</span>
+                        <span class="text-surface-200/60 font-mono">alikhore12@gmail.com</span>
                     </div>
                 </div>
                 <button type="button"
@@ -97,7 +97,7 @@
                                required
                                autofocus
                                autocomplete="username"
-                               placeholder="you@shahzadlabs.com"
+                               placeholder="alikhore12@gmail.com"
                                class="w-full pl-10 pr-4 py-3 bg-surface-950/80 border border-white/[0.08] rounded-xl text-sm text-white placeholder-surface-200/30 focus:outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 transition-all">
                     </div>
                 </div>

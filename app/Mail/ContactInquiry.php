@@ -12,7 +12,7 @@ use Illuminate\Queue\SerializesModels;
 
 /**
  * Mailable dispatched when a visitor submits the contact form.
- * Sends the inquiry details to info@shahzadlabs.com.
+ * Sends the inquiry details to alikhore12@gmail.com.
  */
 class ContactInquiry extends Mailable implements ShouldQueue
 {

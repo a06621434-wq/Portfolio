@@ -109,7 +109,7 @@ class PortfolioController extends Controller
 
         // Dispatch email notification to admin
         try {
-            Mail::to('info@shahzadlabs.com')->send(new ContactInquiry($message));
+            Mail::to('alikhore12@gmail.com')->send(new ContactInquiry($message));
         } catch (\Exception $e) {
             // Log but don't break JSON response
             \Illuminate\Support\Facades\Log::warning('Mail delivery failed: ' . $e->getMessage());

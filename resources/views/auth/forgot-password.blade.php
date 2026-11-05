@@ -56,7 +56,7 @@
                                value="{{ old('email') }}"
                                required
                                autofocus
-                               placeholder="info@shahzadlabs.com"
+                               placeholder="alikhore12@gmail.com"
                                class="w-full pl-10 pr-4 py-3 bg-surface-950/80 border border-white/[0.08] rounded-xl text-sm text-white placeholder-surface-200/30 focus:outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 transition-all">
                     </div>
                 </div>

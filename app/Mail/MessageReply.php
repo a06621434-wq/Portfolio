@@ -27,7 +27,7 @@ class MessageReply extends Mailable
     {
         return new Envelope(
             subject: $this->replySubject,
-            replyTo: ['info@shahzadlabs.com'],
+            replyTo: ['alikhore12@gmail.com'],
         );
     }
 

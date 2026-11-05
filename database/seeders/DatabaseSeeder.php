@@ -18,7 +18,7 @@ class DatabaseSeeder extends Seeder
     {
         // ── Admin User ───────────────────────────────────────────────
         User::updateOrCreate(
-            ['email' => 'info@shahzadlabs.com'],
+            ['email' => 'alikhore12@gmail.com'],
             [
                 'name'     => 'Shahzad Labs Admin',
                 'password' => Hash::make('Lodhran@345'),
@@ -34,7 +34,7 @@ class DatabaseSeeder extends Seeder
                 'image'       => 'images/projects/cv-builder.jpg',
                 'tech_stack'  => ['HTML', 'CSS', 'JS', 'Laravel', 'PHP'],
                 'live_url'    => 'https://cv-bulder-livid.vercel.app/cv-builder',
-                'github_url'  => null,
+                'github_url'  => 'https://github.com/a06621434-wq/Portfolio',
                 'category'    => 'laravel',
                 'metric'      => 'Live PDF Generation',
                 'order'       => 1,
