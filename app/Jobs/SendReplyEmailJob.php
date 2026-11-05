@@ -89,3 +89,4 @@ class SendReplyEmailJob implements ShouldQueue
         Log::error("SendReplyEmailJob: Permanently failed to send reply to [{$this->originalMessage->email}] (Inquiry #{$this->originalMessage->id}): " . $exception->getMessage());
     }
 }
+

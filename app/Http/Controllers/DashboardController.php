@@ -226,14 +226,59 @@ class DashboardController extends Controller
     }
 
     /**
-     * Public Cron Endpoint for Hostinger Scheduled Cron Job.
-     * Usage: curl https://shahzadlabs.com/cron/process-queue?token=shahzadlabs-queue-sync
+     * Public Cron Endpoint for Hostinger Scheduled Cron Job & Diagnostic Verification.
+     * Usage:
+     *   curl https://shahzadlabs.com/cron/process-queue?token=shahzadlabs-queue-sync
+     *   curl https://shahzadlabs.com/cron/process-queue?token=shahzadlabs-queue-sync&action=diagnose
+     *   curl https://shahzadlabs.com/cron/process-queue?token=shahzadlabs-queue-sync&action=test_send&to=alikhore12@gmail.com
      */
     public function cronProcessQueue(Request $request)
     {
         $expectedToken = env('CRON_TOKEN', 'shahzadlabs-queue-sync');
         if ($request->query('token') !== $expectedToken) {
             return response()->json(['error' => 'Unauthorized cron token'], 403);
+        }
+
+        $action = $request->query('action', 'work');
+
+        if ($action === 'diagnose') {
+            $recentFailed = DB::table('failed_jobs')->latest('id')->take(3)->get();
+            return response()->json([
+                'status'           => 'diagnostics',
+                'time'             => now()->toDateTimeString(),
+                'mail_default'     => config('mail.default'),
+                'smtp_host'        => config('mail.mailers.smtp.host'),
+                'smtp_port'        => config('mail.mailers.smtp.port'),
+                'smtp_username'    => config('mail.mailers.smtp.username'),
+                'smtp_encryption'  => config('mail.mailers.smtp.encryption'),
+                'mail_from'        => config('mail.from'),
+                'queue_driver'     => config('queue.default'),
+                'pending_jobs'     => DB::table('jobs')->count(),
+                'failed_jobs_count'=> DB::table('failed_jobs')->count(),
+                'recent_failed'    => $recentFailed,
+                'php_mail_enabled' => function_exists('mail'),
+                'sendmail_path'    => ini_get('sendmail_path'),
+            ]);
+        }
+
+        if ($action === 'test_send') {
+            $to = $request->query('to', 'alikhore12@gmail.com');
+            $mailer = $request->query('mailer', config('mail.default'));
+            try {
+                Mail::mailer($mailer)->raw("Shahzad Labs Diagnostic Test Mail\nSent at: " . now()->toDateTimeString() . "\nMailer: {$mailer}", function ($m) use ($to, $mailer) {
+                    $m->to($to)->subject("Shahzad Labs Test via [{$mailer}] - " . now()->format('H:i:s'));
+                });
+                return response()->json([
+                    'status'  => 'success',
+                    'message' => "Email sent successfully to {$to} via [{$mailer}].",
+                ]);
+            } catch (\Throwable $e) {
+                return response()->json([
+                    'status'  => 'error',
+                    'mailer'  => $mailer,
+                    'error'   => $e->getMessage(),
+                ], 500);
+            }
         }
 
         try {
