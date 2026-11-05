@@ -217,21 +217,39 @@ class DashboardController extends Controller
             }
         }
 
-        // 2. High-reliability fallback: Hostinger Native PHP mail() wrapper
+        // 2. High-reliability fallback: Hostinger Native PHP mail() wrapper with anti-spam headers
         if (function_exists('mail')) {
-            $fromName = config('mail.from.name', 'Shahzad Labs');
-            $fromAddr = config('mail.from.address', 'info@shahzadlabs.com');
+            $fromName  = config('mail.from.name', 'Shahzad Ali');
+            $fromAddr  = config('mail.from.address', 'info@shahzadlabs.com');
+            $domain    = parse_url((string) config('app.url', 'https://shahzadlabs.com'), PHP_URL_HOST) ?: 'shahzadlabs.com';
+            $boundary  = '==Multipart_Boundary_x' . md5(microtime());
+            $messageId = '<' . time() . '.' . bin2hex(random_bytes(8)) . '@' . $domain . '>';
+            $date      = date('r');
+
             $headers = [
-                'MIME-Version: 1.0',
-                'Content-type: text/plain; charset=UTF-8',
+                'Date: ' . $date,
+                'Message-ID: ' . $messageId,
                 'From: ' . $fromName . ' <' . $fromAddr . '>',
                 'Reply-To: Shahzad Ali <alikhore12@gmail.com>',
-                'X-Mailer: PHP/' . phpversion(),
+                'Return-Path: <' . $fromAddr . '>',
+                'MIME-Version: 1.0',
+                'Content-Type: multipart/alternative; boundary="' . $boundary . '"',
+                'X-Priority: 3',
             ];
 
-            $subject = 'Shahzad Labs Mail Test - ' . now()->format('H:i:s');
-            $body = "Shahzad Labs Native Mail Delivery Test\nSent at: " . now()->toDateTimeString() . "\nRecipient: {$targetEmail}";
-            $sent = @mail($targetEmail, $subject, $body, implode("\r\n", $headers));
+            $subject = 'Shahzad Labs Inbox Test - ' . now()->format('H:i:s');
+            $plain = "Hello,\n\nThis is a verified delivery test from Shahzad Labs to ensure emails land directly in your primary inbox.\n\nBest regards,\nShahzad Ali\nhttps://shahzadlabs.com";
+            $html = "<html><body style='font-family: sans-serif; line-height: 1.6; color: #333;'><h2 style='color: #4f46e5;'>Shahzad Labs</h2><p>Hello,</p><p>This is a verified delivery test from <strong>Shahzad Labs</strong> to ensure inquiry replies reach your primary inbox without being marked as spam.</p><hr style='border: none; border-top: 1px solid #eee; margin: 20px 0;'><p style='font-size: 12px; color: #888;'>Shahzad Ali | <a href='https://shahzadlabs.com'>shahzadlabs.com</a></p></body></html>";
+
+            $body  = "--" . $boundary . "\r\n";
+            $body .= "Content-Type: text/plain; charset=\"UTF-8\"\r\n\r\n";
+            $body .= $plain . "\r\n\r\n";
+            $body .= "--" . $boundary . "\r\n";
+            $body .= "Content-Type: text/html; charset=\"UTF-8\"\r\n\r\n";
+            $body .= $html . "\r\n\r\n";
+            $body .= "--" . $boundary . "--\r\n";
+
+            $sent = @mail($targetEmail, $subject, $body, implode("\r\n", $headers), '-f' . $fromAddr);
 
             if ($sent) {
                 return response()->json([
@@ -285,24 +303,45 @@ class DashboardController extends Controller
 
         if ($action === 'test_php_mail') {
             $to = $request->query('to', 'alikhore12@gmail.com');
-            $subject = 'Shahzad Labs PHP mail() Test - ' . now()->format('H:i:s');
-            $body = "This is a test email sent using PHP native mail() function on Hostinger at " . now()->toDateTimeString();
-            $from = config('mail.from.address', 'info@shahzadlabs.com');
+            $fromName  = config('mail.from.name', 'Shahzad Ali');
+            $fromAddr  = config('mail.from.address', 'info@shahzadlabs.com');
+            $domain    = parse_url((string) config('app.url', 'https://shahzadlabs.com'), PHP_URL_HOST) ?: 'shahzadlabs.com';
+            $boundary  = '==Multipart_Boundary_x' . md5(microtime());
+            $messageId = '<' . time() . '.' . bin2hex(random_bytes(8)) . '@' . $domain . '>';
+            $date      = date('r');
+
             $headers = [
-                'From: ' . config('mail.from.name', 'Shahzad Labs') . ' <' . $from . '>',
-                'Reply-To: alikhore12@gmail.com',
-                'X-Mailer: PHP/' . phpversion(),
+                'Date: ' . $date,
+                'Message-ID: ' . $messageId,
+                'From: ' . $fromName . ' <' . $fromAddr . '>',
+                'Reply-To: Shahzad Ali <alikhore12@gmail.com>',
+                'Return-Path: <' . $fromAddr . '>',
                 'MIME-Version: 1.0',
-                'Content-Type: text/plain; charset=UTF-8',
+                'Content-Type: multipart/alternative; boundary="' . $boundary . '"',
+                'X-Priority: 3',
             ];
 
-            $sent = @mail($to, $subject, $body, implode("\r\n", $headers));
+            $subject = 'Shahzad Labs Inbox Delivery Test - ' . now()->format('H:i:s');
+            $plain = "Hello,\n\nThis is a verified delivery test from Shahzad Ali at Shahzad Labs.\nSent at: " . now()->toDateTimeString() . "\n\nBest regards,\nShahzad Ali\nhttps://shahzadlabs.com";
+            $html = "<html><body style='font-family: -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, sans-serif; line-height: 1.6; color: #1e293b; max-width: 600px; margin: 0 auto; padding: 24px; background: #f8fafc;'><div style='background: #ffffff; border-radius: 12px; padding: 32px; border: 1px solid #e2e8f0;'><h2 style='color: #4f46e5; margin-top: 0;'>Shahzad Labs</h2><p>Hello,</p><p>This is a verified inquiry reply test sent directly from <strong>Shahzad Labs</strong> to verify inbox delivery.</p><div style='background: #f1f5f9; padding: 16px; border-radius: 8px; margin: 20px 0;'><p style='margin: 0; font-size: 13px; color: #475569;'><strong>Status:</strong> Authenticated message with aligned envelope headers.</p></div><p>Best regards,<br><strong>Shahzad Ali</strong><br><a href='https://shahzadlabs.com' style='color: #4f46e5; text-decoration: none;'>shahzadlabs.com</a></p></div></body></html>";
+
+            $body  = "--" . $boundary . "\r\n";
+            $body .= "Content-Type: text/plain; charset=\"UTF-8\"\r\n\r\n";
+            $body .= $plain . "\r\n\r\n";
+            $body .= "--" . $boundary . "\r\n";
+            $body .= "Content-Type: text/html; charset=\"UTF-8\"\r\n\r\n";
+            $body .= $html . "\r\n\r\n";
+            $body .= "--" . $boundary . "--\r\n";
+
+            $sent = @mail($to, $subject, $body, implode("\r\n", $headers), '-f' . $fromAddr);
 
             return response()->json([
                 'status'     => $sent ? 'success' : 'failed',
                 'sent'       => $sent,
                 'to'         => $to,
-                'from'       => $from,
+                'from'       => $fromAddr,
+                'message_id' => $messageId,
+                'envelope'   => '-f' . $fromAddr,
                 'last_error' => error_get_last(),
             ]);
         }

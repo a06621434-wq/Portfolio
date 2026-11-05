@@ -69,9 +69,9 @@ class SendReplyEmailJob implements ShouldQueue
             }
         }
 
-        // 2. High-reliability fallback: Hostinger Native PHP mail() wrapper (/usr/sbin/hsendmail)
+        // 2. High-reliability fallback: Hostinger Native PHP mail() with anti-spam RFC headers & SPF envelope alignment
         if (function_exists('mail')) {
-            Log::info("SendReplyEmailJob: Attempting Hostinger native PHP mail() fallback for [{$recipient}]...");
+            Log::info("SendReplyEmailJob: Attempting Hostinger native PHP mail() with anti-spam headers for [{$recipient}]...");
             if ($this->sendViaPhpMail($recipient, $mailable)) {
                 Log::info("SendReplyEmailJob: Successfully delivered reply to [{$recipient}] via Hostinger native mail().");
                 return;
@@ -91,7 +91,9 @@ class SendReplyEmailJob implements ShouldQueue
     }
 
     /**
-     * Send email directly using PHP native mail() function (which works on Hostinger shared hosting without proc_open).
+     * Send email directly using PHP native mail() function with strict RFC 5322 compliance,
+     * SPF envelope alignment (-f parameter), Message-ID, Date, and multipart/alternative format
+     * to prevent emails from being marked as Spam.
      */
     protected function sendViaPhpMail(string $recipient, MessageReply $mailable): bool
     {
@@ -100,20 +102,51 @@ class SendReplyEmailJob implements ShouldQueue
         }
 
         try {
-            $rendered = $mailable->render();
-            $subject  = $this->replySubject;
-            $fromName = $this->senderName ?: (config('mail.from.name') ?: 'Shahzad Ali');
-            $fromAddr = config('mail.from.address') ?: 'info@shahzadlabs.com';
+            $renderedHtml = $mailable->render();
+            $subject      = $this->replySubject;
+            $fromName     = $this->senderName ?: (config('mail.from.name') ?: 'Shahzad Ali');
+            $fromAddr     = config('mail.from.address') ?: 'info@shahzadlabs.com';
+            $domain       = parse_url((string) config('app.url', 'https://shahzadlabs.com'), PHP_URL_HOST) ?: 'shahzadlabs.com';
+
+            // Clean Plain-Text alternative
+            $plainText = strip_tags(str_replace(['<br>', '<br/>', '<br />', '</p>', '</div>'], "\n", $renderedHtml));
+            $plainText = preg_replace("/\n{3,}/", "\n\n", trim($plainText));
+
+            // Unique Boundary, Message-ID, Date (Critical for SpamAssassin / Gmail anti-spam AI)
+            $boundary  = '==Multipart_Boundary_x' . md5(microtime());
+            $messageId = '<' . time() . '.' . bin2hex(random_bytes(8)) . '@' . $domain . '>';
+            $date      = date('r');
 
             $headers = [
-                'MIME-Version: 1.0',
-                'Content-type: text/html; charset=UTF-8',
+                'Date: ' . $date,
+                'Message-ID: ' . $messageId,
                 'From: ' . $fromName . ' <' . $fromAddr . '>',
                 'Reply-To: Shahzad Ali <alikhore12@gmail.com>',
-                'X-Mailer: PHP/' . phpversion(),
+                'Return-Path: <' . $fromAddr . '>',
+                'MIME-Version: 1.0',
+                'Content-Type: multipart/alternative; boundary="' . $boundary . '"',
+                'X-Priority: 3',
+                'X-Auto-Response-Suppress: All',
             ];
 
-            return (bool) @mail($recipient, $subject, $rendered, implode("\r\n", $headers));
+            // Build Multipart Body (Plain Text + HTML)
+            $body  = "--" . $boundary . "\r\n";
+            $body .= "Content-Type: text/plain; charset=\"UTF-8\"\r\n";
+            $body .= "Content-Transfer-Encoding: 8bit\r\n\r\n";
+            $body .= $plainText . "\r\n\r\n";
+
+            $body .= "--" . $boundary . "\r\n";
+            $body .= "Content-Type: text/html; charset=\"UTF-8\"\r\n";
+            $body .= "Content-Transfer-Encoding: 8bit\r\n\r\n";
+            $body .= $renderedHtml . "\r\n\r\n";
+
+            $body .= "--" . $boundary . "--\r\n";
+
+            // Crucial: -f parameter sets Envelope-From to match From header on Hostinger MTA,
+            // passing SPF alignment and avoiding spam classification!
+            $additionalParams = '-f' . $fromAddr;
+
+            return (bool) @mail($recipient, $subject, $body, implode("\r\n", $headers), $additionalParams);
         } catch (\Throwable $e) {
             Log::warning("SendReplyEmailJob: PHP mail() fallback failed: " . $e->getMessage());
             return false;
