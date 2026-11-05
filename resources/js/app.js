@@ -18,6 +18,7 @@ document.addEventListener('DOMContentLoaded', () => {
     initCounterAnimation();
     initSmoothScroll();
     initCopyEmail();
+    initLinkedInMessage();
     initNavScrollSpy();
 });
 
@@ -324,4 +325,25 @@ function initNavScrollSpy() {
     }, { threshold: 0.3, rootMargin: '-80px 0px -50% 0px' });
 
     sections.forEach(section => observer.observe(section));
+}
+
+// ── LinkedIn Direct Message Copy & Assist ─────────────────────────────
+function initLinkedInMessage() {
+    const linkedInBtns = document.querySelectorAll('[data-linkedin-dm]');
+    if (!linkedInBtns.length) return;
+
+    const messageText = 'Hello Shahzad! I visited your portfolio (shahzadlabs.com) and would like to discuss a project with you.';
+
+    linkedInBtns.forEach(btn => {
+        btn.addEventListener('click', async () => {
+            try {
+                if (navigator.clipboard) {
+                    await navigator.clipboard.writeText(messageText);
+                    showToast('Opening LinkedIn message composer! Message copied to clipboard for easy paste.', 'success');
+                }
+            } catch (e) {
+                // Clipboard fallback silently continues
+            }
+        });
+    });
 }

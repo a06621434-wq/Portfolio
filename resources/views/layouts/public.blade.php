@@ -199,12 +199,12 @@
                             </a>
                         </div>
                         <div>
-                            <p class="text-surface-200/50 mb-1">LinkedIn Profile:</p>
-                            <a href="https://www.linkedin.com/in/shahzad-ali-b2a0063a9" target="_blank" rel="noopener" class="inline-flex items-center gap-1.5 text-blue-400 hover:text-blue-300 font-medium transition-colors">
+                            <p class="text-surface-200/50 mb-1">LinkedIn Direct Message:</p>
+                            <a href="https://www.linkedin.com/messaging/compose/?body={{ urlencode('Hello Shahzad! I visited your portfolio (shahzadlabs.com) and would like to discuss a project with you.') }}" target="_blank" rel="noopener" data-linkedin-dm class="inline-flex items-center gap-1.5 text-blue-400 hover:text-blue-300 font-medium transition-colors">
                                 <svg class="w-3.5 h-3.5 fill-current" viewBox="0 0 24 24">
                                     <path d="M19 3a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h14m-.5 15.5v-5.3a3.26 3.26 0 0 0-3.26-3.26c-.85 0-1.84.52-2.28 1.3v-1.11h-2.79v8.37h2.79v-4.93c0-.77.62-1.4 1.39-1.4a1.4 1.4 0 0 1 1.4 1.4v4.93h2.75M6.46 8.76a1.5 1.5 0 1 0 0-3 1.5 1.5 0 0 0 0 3m1.4 9.74v-8.37H5.06v8.37h2.8z"/>
                                 </svg>
-                                <span>Shahzad Ali on LinkedIn &nearr;</span>
+                                <span>Message Shahzad Ali on LinkedIn &nearr;</span>
                             </a>
                         </div>
                     </div>

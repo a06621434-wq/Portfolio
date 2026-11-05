@@ -125,6 +125,27 @@
                         </div>
                     </div>
 
+                    {{-- LinkedIn Direct Message Card --}}
+                    <div class="glass-card p-6">
+                        <div class="flex items-center gap-3 mb-4 pb-4 border-b border-white/[0.08]">
+                            <div class="h-10 w-10 rounded-xl bg-blue-500/15 text-blue-400 flex items-center justify-center">
+                                <svg class="w-5 h-5 fill-current" viewBox="0 0 24 24"><path d="M19 3a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h14m-.5 15.5v-5.3a3.26 3.26 0 0 0-3.26-3.26c-.85 0-1.84.52-2.28 1.3v-1.11h-2.79v8.37h2.79v-4.93c0-.77.62-1.4 1.39-1.4a1.4 1.4 0 0 1 1.4 1.4v4.93h2.75M6.46 8.76a1.5 1.5 0 1 0 0-3 1.5 1.5 0 0 0 0 3m1.4 9.74v-8.37H5.06v8.37h2.8z"/></svg>
+                            </div>
+                            <div>
+                                <h3 class="font-display text-sm font-bold text-white">LinkedIn Messaging</h3>
+                                <p class="text-xs text-surface-200/40">Direct chat &amp; networking</p>
+                            </div>
+                        </div>
+
+                        <p class="text-xs text-surface-200/50 mb-3">Open direct chat with pre-filled greeting:</p>
+                        <a href="https://www.linkedin.com/messaging/compose/?body={{ urlencode('Hello Shahzad! I visited your portfolio (shahzadlabs.com) and would like to discuss a project with you.') }}"
+                           target="_blank" rel="noopener"
+                           data-linkedin-dm
+                           class="inline-flex items-center gap-1.5 text-xs font-semibold text-blue-400 hover:text-blue-300 transition-colors">
+                            <span>Open LinkedIn Direct Chat &nearr;</span>
+                        </a>
+                    </div>
+
                     {{-- Response Guarantee --}}
                     <div class="glass-card p-6">
                         <div class="flex items-center gap-3 mb-2">
