@@ -105,7 +105,7 @@ class SendReplyEmailJob implements ShouldQueue
             $renderedHtml = $mailable->render();
             $subject      = $this->replySubject;
             $fromName     = $this->senderName ?: (config('mail.from.name') ?: 'Shahzad Ali');
-            $fromAddr     = config('mail.from.address') ?: 'info@shahzadlabs.com';
+            $fromAddr     = config('mail.from.address') ?: 'alikhore12@gmail.com';
             $domain       = parse_url((string) config('app.url', 'https://shahzadlabs.com'), PHP_URL_HOST) ?: 'shahzadlabs.com';
 
             // Clean Plain-Text alternative

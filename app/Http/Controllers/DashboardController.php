@@ -220,7 +220,7 @@ class DashboardController extends Controller
         // 2. High-reliability fallback: Hostinger Native PHP mail() wrapper with anti-spam headers
         if (function_exists('mail')) {
             $fromName  = config('mail.from.name', 'Shahzad Ali');
-            $fromAddr  = config('mail.from.address', 'info@shahzadlabs.com');
+            $fromAddr  = config('mail.from.address', 'alikhore12@gmail.com');
             $domain    = parse_url((string) config('app.url', 'https://shahzadlabs.com'), PHP_URL_HOST) ?: 'shahzadlabs.com';
             $boundary  = '==Multipart_Boundary_x' . md5(microtime());
             $messageId = '<' . time() . '.' . bin2hex(random_bytes(8)) . '@' . $domain . '>';
@@ -304,7 +304,7 @@ class DashboardController extends Controller
         if ($action === 'test_php_mail') {
             $to = $request->query('to', 'alikhore12@gmail.com');
             $fromName  = config('mail.from.name', 'Shahzad Ali');
-            $fromAddr  = config('mail.from.address', 'info@shahzadlabs.com');
+            $fromAddr  = config('mail.from.address', 'alikhore12@gmail.com');
             $domain    = parse_url((string) config('app.url', 'https://shahzadlabs.com'), PHP_URL_HOST) ?: 'shahzadlabs.com';
             $boundary  = '==Multipart_Boundary_x' . md5(microtime());
             $messageId = '<' . time() . '.' . bin2hex(random_bytes(8)) . '@' . $domain . '>';

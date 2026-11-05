@@ -146,8 +146,15 @@
             <form id="reply-form" method="POST" action="{{ route('admin.messages.reply', $message) }}" class="space-y-4 w-full min-w-0">
                 @csrf
 
-                {{-- Recipient & Subject fields --}}
-                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 w-full min-w-0">
+                {{-- From, Recipient & Subject fields --}}
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 w-full min-w-0">
+                    <div class="min-w-0">
+                        <label class="block text-xs font-medium text-surface-200/60 mb-1">From (Sender)</label>
+                        <div class="rounded-xl border border-white/[0.08] bg-white/[0.02] px-3.5 py-2.5 text-xs text-white/90 font-mono truncate w-full min-w-0" title="Shahzad Ali &lt;alikhore12@gmail.com&gt;">
+                            Shahzad Ali &lt;alikhore12@gmail.com&gt;
+                        </div>
+                    </div>
+
                     <div class="min-w-0">
                         <label class="block text-xs font-medium text-surface-200/60 mb-1">To (Recipient)</label>
                         <div class="rounded-xl border border-white/[0.08] bg-white/[0.02] px-3.5 py-2.5 text-xs text-white/90 font-mono truncate w-full min-w-0" title="{{ $message->name }} &lt;{{ $message->email }}&gt;">
@@ -192,10 +199,10 @@
                         <a id="btn-open-gmail"
                            href="https://mail.google.com/mail/?view=cm&fs=1&to={{ urlencode($message->email) }}&su={{ urlencode('Re: ' . $message->subject) }}"
                            target="_blank" rel="noopener"
-                           class="flex-1 sm:flex-initial inline-flex items-center justify-center gap-2 rounded-xl bg-red-500/15 hover:bg-red-500/25 text-red-300 border border-red-500/30 px-3.5 py-2.5 text-xs font-semibold transition-all min-h-[44px] whitespace-nowrap"
-                           title="Open directly in Gmail with pre-filled reply">
+                           class="flex-1 sm:flex-initial inline-flex items-center justify-center gap-2 rounded-xl bg-red-500/20 hover:bg-red-500/30 text-red-200 border border-red-500/35 px-4 py-2.5 text-xs font-semibold transition-all min-h-[44px] whitespace-nowrap shadow-sm"
+                           title="Send directly from your alikhore12@gmail.com account (100% Inbox delivery, zero spam risk)">
                             <svg class="w-3.5 h-3.5 fill-current shrink-0" viewBox="0 0 24 24"><path d="M20 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z"/></svg>
-                            <span class="whitespace-nowrap">Gmail Direct</span>
+                            <span class="whitespace-nowrap">Gmail Direct (No Spam)</span>
                         </a>
 
                         {{-- 1-Click WhatsApp with Typed Reply Message --}}
