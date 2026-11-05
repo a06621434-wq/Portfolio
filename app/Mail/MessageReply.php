@@ -42,7 +42,7 @@ class MessageReply extends Mailable implements ShouldQueue
 
     public function envelope(): Envelope
     {
-        $fromAddress = config('mail.from.address') ?: 'alikhore12@gmail.com';
+        $fromAddress = 'alikhore12@gmail.com';
         $fromName    = $this->senderName ?: (config('mail.from.name') ?: 'Shahzad Ali');
 
         return new Envelope(
