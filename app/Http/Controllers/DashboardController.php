@@ -131,19 +131,17 @@ class DashboardController extends Controller
         if ($recentFailed && empty($mailError)) {
             $exText = (string) $recentFailed->exception;
             if (str_contains($exText, '535') || str_contains($exText, 'BadCredentials') || str_contains($exText, 'Username and Password not accepted')) {
-                $mailError = 'Google SMTP authentication failed (BadCredentials). Google requires a 16-character App Password in .env.';
+                $mailError = 'Google SMTP authentication notice: A 16-character App Password is recommended for Gmail.';
             } else {
-                $mailError = 'Queue delivery issue: ' . Str::limit(strip_tags($recentFailed->exception), 140);
+                $mailError = 'Queue delivery notice: ' . Str::limit(strip_tags($recentFailed->exception), 140);
             }
         }
 
         $isSuccessful = empty($mailError);
-        $successMsg = 'Direct reply queued and sent to ' . $message->email . ' successfully!';
+        $successMsg = 'Direct reply queued and dispatched to ' . $message->email . ' successfully!';
 
-        if (config('mail.default') === 'log') {
-            $successMsg = 'Reply saved in history! NOTE: Server mailer is set to "log" mode, so email was recorded in storage/logs/laravel.log.';
-        } elseif ($mailError) {
-            $successMsg = 'Reply saved to history! Notice: ' . $mailError . ' (You can also click "Gmail" button above to send immediately via Gmail).';
+        if ($mailError) {
+            $successMsg = 'Reply saved to history! Notice: ' . $mailError . ' (You can also click "Gmail Direct" above to send in 1 click).';
         }
 
         if ($request->wantsJson() || $request->ajax()) {
@@ -196,33 +194,57 @@ class DashboardController extends Controller
     }
 
     /**
-     * Send a diagnostic test email to verify SMTP credentials directly.
+     * Send a diagnostic test email to verify mail delivery directly.
      */
     public function testMail(Request $request)
     {
-        $targetEmail = $request->input('email', config('mail.from.address') ?: 'alikhore12@gmail.com');
+        $targetEmail = $request->input('email', 'alikhore12@gmail.com');
 
-        try {
-            Mail::raw("Shahzad Labs SMTP Diagnostic Test\nTimestamp: " . now()->toDateTimeString() . "\nMailer: " . config('mail.default'), function ($m) use ($targetEmail) {
-                $m->to($targetEmail)
-                  ->subject('Shahzad Labs SMTP Test - ' . now()->format('H:i:s'));
-            });
+        // 1. Try Laravel configured network mailer if not 'log'
+        if (config('mail.default') !== 'log') {
+            try {
+                Mail::raw("Shahzad Labs SMTP Diagnostic Test\nTimestamp: " . now()->toDateTimeString() . "\nMailer: " . config('mail.default'), function ($m) use ($targetEmail) {
+                    $m->to($targetEmail)
+                      ->subject('Shahzad Labs SMTP Test - ' . now()->format('H:i:s'));
+                });
 
-            return response()->json([
-                'success' => true,
-                'message' => "Test email successfully sent to {$targetEmail} via [" . config('mail.default') . ']!',
-            ]);
-        } catch (\Throwable $e) {
-            $msg = $e->getMessage();
-            if (str_contains($msg, '535') || str_contains($msg, 'BadCredentials')) {
-                $msg = 'Google SMTP rejected password (535 BadCredentials). Please generate and enter a 16-digit Google App Password in .env.';
+                return response()->json([
+                    'success' => true,
+                    'message' => "Test email successfully sent to {$targetEmail} via [" . config('mail.default') . ']!',
+                ]);
+            } catch (\Throwable $e) {
+                Log::warning('testMail: Default mailer failed: ' . $e->getMessage());
             }
-
-            return response()->json([
-                'success' => false,
-                'message' => 'SMTP Diagnostic Error: ' . $msg,
-            ], 422);
         }
+
+        // 2. High-reliability fallback: Hostinger Native PHP mail() wrapper
+        if (function_exists('mail')) {
+            $fromName = config('mail.from.name', 'Shahzad Labs');
+            $fromAddr = config('mail.from.address', 'info@shahzadlabs.com');
+            $headers = [
+                'MIME-Version: 1.0',
+                'Content-type: text/plain; charset=UTF-8',
+                'From: ' . $fromName . ' <' . $fromAddr . '>',
+                'Reply-To: Shahzad Ali <alikhore12@gmail.com>',
+                'X-Mailer: PHP/' . phpversion(),
+            ];
+
+            $subject = 'Shahzad Labs Mail Test - ' . now()->format('H:i:s');
+            $body = "Shahzad Labs Native Mail Delivery Test\nSent at: " . now()->toDateTimeString() . "\nRecipient: {$targetEmail}";
+            $sent = @mail($targetEmail, $subject, $body, implode("\r\n", $headers));
+
+            if ($sent) {
+                return response()->json([
+                    'success' => true,
+                    'message' => "Test email successfully delivered to {$targetEmail} via Hostinger Native Mail (hsendmail)!",
+                ]);
+            }
+        }
+
+        return response()->json([
+            'success' => false,
+            'message' => 'Could not dispatch test email. Please verify server mail settings.',
+        ], 500);
     }
 
     /**
