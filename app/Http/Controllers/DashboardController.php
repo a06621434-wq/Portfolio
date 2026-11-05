@@ -95,7 +95,9 @@ class DashboardController extends Controller
         }
 
         $successMsg = 'Direct reply sent to ' . $message->email . ' successfully!';
-        if ($mailError) {
+        if (config('mail.default') === 'log') {
+            $successMsg = 'Reply saved in history! NOTE: Server mailer is currently set to "log" mode, so real email is not sent over internet until SMTP is configured in .env.';
+        } elseif ($mailError) {
             $successMsg .= ' (Reply saved to history; mail status: ' . $mailError . ')';
         }
 
