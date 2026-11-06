@@ -158,8 +158,8 @@
                 <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 w-full min-w-0">
                     <div class="min-w-0">
                         <label class="block text-xs font-medium text-surface-200/60 mb-1">From (Sender)</label>
-                        <div class="rounded-xl border border-white/[0.08] bg-white/[0.02] px-3.5 py-2.5 text-xs text-white/90 font-mono truncate w-full min-w-0" title="Shahzad Ali &lt;contact@shahzadlabs.com&gt; (Replies to alikhore12@gmail.com)">
-                            contact@shahzadlabs.com
+                        <div class="rounded-xl border border-white/[0.08] bg-white/[0.02] px-3.5 py-2.5 text-xs text-white/90 font-mono truncate w-full min-w-0" title="Shahzad Ali &lt;alikhore12@gmail.com&gt;">
+                            Shahzad Ali &lt;alikhore12@gmail.com&gt;
                         </div>
                     </div>
 

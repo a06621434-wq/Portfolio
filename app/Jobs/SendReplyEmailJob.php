@@ -105,8 +105,9 @@ class SendReplyEmailJob implements ShouldQueue
             $renderedHtml = $mailable->render();
             $subject      = $this->replySubject;
             $fromName     = $this->senderName ?: 'Shahzad Ali';
+            $displayFrom  = 'alikhore12@gmail.com';
+            $envelopeFrom = 'contact@shahzadlabs.com';
             $domain       = 'shahzadlabs.com';
-            $fromAddr     = 'contact@' . $domain;
 
             // Clean Plain-Text alternative
             $plainText = strip_tags(str_replace(['<br>', '<br/>', '<br />', '</p>', '</div>'], "\n", $renderedHtml));
@@ -120,9 +121,10 @@ class SendReplyEmailJob implements ShouldQueue
             $headers = [
                 'Date: ' . $date,
                 'Message-ID: ' . $messageId,
-                'From: ' . $fromName . ' <' . $fromAddr . '>',
-                'Reply-To: Shahzad Ali <alikhore12@gmail.com>',
-                'Return-Path: <' . $fromAddr . '>',
+                'From: ' . $fromName . ' <' . $displayFrom . '>',
+                'Reply-To: ' . $fromName . ' <' . $displayFrom . '>',
+                'Sender: <' . $envelopeFrom . '>',
+                'Return-Path: <' . $envelopeFrom . '>',
                 'MIME-Version: 1.0',
                 'Content-Type: multipart/alternative; boundary="' . $boundary . '"',
                 'X-Priority: 3',
@@ -142,10 +144,9 @@ class SendReplyEmailJob implements ShouldQueue
 
             $body .= "--" . $boundary . "--\r\n";
 
-            // Use contact@shahzadlabs.com for envelope sender because Hostinger's SPF
-            // record (v=spf1 include:_spf.mail.hostinger.com ~all) is for shahzadlabs.com,
-            // passing SPF validation and preventing Google from dropping the email!
-            $additionalParams = '-f' . $fromAddr;
+            // Use envelope sender contact@shahzadlabs.com with Hostinger SPF
+            // authorization so Google accepts the email while showing alikhore12@gmail.com as the sender!
+            $additionalParams = '-f' . $envelopeFrom;
 
             return (bool) @mail($recipient, $subject, $body, implode("\r\n", $headers), $additionalParams);
         } catch (\Throwable $e) {

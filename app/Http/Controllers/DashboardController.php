@@ -219,27 +219,29 @@ class DashboardController extends Controller
 
         // 2. High-reliability fallback: Hostinger Native PHP mail() wrapper with anti-spam headers
         if (function_exists('mail')) {
-            $fromName  = 'Shahzad Ali';
-            $fromAddr  = 'contact@shahzadlabs.com';
-            $domain    = 'shahzadlabs.com';
-            $boundary  = '==Multipart_Boundary_x' . md5(microtime());
-            $messageId = '<' . time() . '.' . bin2hex(random_bytes(8)) . '@' . $domain . '>';
-            $date      = date('r');
+            $fromName     = 'Shahzad Ali';
+            $displayFrom  = 'alikhore12@gmail.com';
+            $envelopeFrom = 'contact@shahzadlabs.com';
+            $domain       = 'shahzadlabs.com';
+            $boundary     = '==Multipart_Boundary_x' . md5(microtime());
+            $messageId    = '<' . time() . '.' . bin2hex(random_bytes(8)) . '@' . $domain . '>';
+            $date         = date('r');
 
             $headers = [
                 'Date: ' . $date,
                 'Message-ID: ' . $messageId,
-                'From: ' . $fromName . ' <' . $fromAddr . '>',
-                'Reply-To: Shahzad Ali <alikhore12@gmail.com>',
-                'Return-Path: <' . $fromAddr . '>',
+                'From: ' . $fromName . ' <' . $displayFrom . '>',
+                'Reply-To: ' . $fromName . ' <' . $displayFrom . '>',
+                'Sender: <' . $envelopeFrom . '>',
+                'Return-Path: <' . $envelopeFrom . '>',
                 'MIME-Version: 1.0',
                 'Content-Type: multipart/alternative; boundary="' . $boundary . '"',
                 'X-Priority: 3',
             ];
 
             $subject = 'Shahzad Labs Inbox Test - ' . now()->format('H:i:s');
-            $plain = "Hello,\n\nThis is a verified delivery test from Shahzad Labs to ensure emails land directly in your primary inbox.\n\nBest regards,\nShahzad Ali\nhttps://shahzadlabs.com";
-            $html = "<html><body style='font-family: sans-serif; line-height: 1.6; color: #333;'><h2 style='color: #4f46e5;'>Shahzad Labs</h2><p>Hello,</p><p>This is a verified delivery test from <strong>Shahzad Labs</strong> to ensure inquiry replies reach your primary inbox without being marked as spam.</p><hr style='border: none; border-top: 1px solid #eee; margin: 20px 0;'><p style='font-size: 12px; color: #888;'>Shahzad Ali | <a href='https://shahzadlabs.com'>shahzadlabs.com</a></p></body></html>";
+            $plain = "Hello,\n\nThis is a verified delivery test from Shahzad Ali (alikhore12@gmail.com) at Shahzad Labs.\nSent at: " . now()->toDateTimeString() . "\n\nBest regards,\nShahzad Ali\nhttps://shahzadlabs.com";
+            $html = "<html><body style='font-family: sans-serif; line-height: 1.6; color: #333;'><h2 style='color: #4f46e5;'>Shahzad Labs</h2><p>Hello,</p><p>This is a verified delivery test from <strong>Shahzad Ali (alikhore12@gmail.com)</strong> at Shahzad Labs to ensure inquiry replies reach your primary inbox without being marked as spam.</p><hr style='border: none; border-top: 1px solid #eee; margin: 20px 0;'><p style='font-size: 12px; color: #888;'>Shahzad Ali | <a href='https://shahzadlabs.com'>shahzadlabs.com</a></p></body></html>";
 
             $body  = "--" . $boundary . "\r\n";
             $body .= "Content-Type: text/plain; charset=\"UTF-8\"\r\n\r\n";
@@ -249,7 +251,7 @@ class DashboardController extends Controller
             $body .= $html . "\r\n\r\n";
             $body .= "--" . $boundary . "--\r\n";
 
-            $sent = @mail($targetEmail, $subject, $body, implode("\r\n", $headers), '-f' . $fromAddr);
+            $sent = @mail($targetEmail, $subject, $body, implode("\r\n", $headers), '-f' . $envelopeFrom);
 
             if ($sent) {
                 return response()->json([
